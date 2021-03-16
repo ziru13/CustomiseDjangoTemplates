@@ -1,0 +1,87 @@
+1. Template tagas and filters
+掌握一些最方便的内置(built-in)模板标签和过滤器,
+学习如何include外部模板库(external template libraries )到你的项目中,
+并且加载app-specific的静态内容到你的项目中.
+========================================================================================
+1.1 Template inheritance
+这节课的视频中,会复习一写模板继承的基础概念,和静态内容怎么运作, 
+也会学到最常见的模板tags和过滤器，譬如{% for %}标签
+
+***参考：https://docs.djangoproject.com/en/1.8/ref/templates/builtins/
+***这是内置模板标签和过滤器的例表, 你会在使用Django是用到这些标签和过滤器
+***{% for x in y %}, 用于django模板中的for loop
+***{% extends "template.html" %}, 在当前模板中扩展引用的模板, 以便你可以重写在父模板中的板块(blocks)
+***{% block name %}{% endblock %}, 标记一个被命名的板块的开始和和结尾, 通过继承可以被代替
+***{% load static from staticfiles %}, 放在模板最上面, 从staticfiles库中加载{% static %}标签
+		注意!!! Django3.0已经删除了“from staticfiles”这个部分，{% load static %}就可以了
+***{% static "/path/to/file.ext" %}, 生成到指定文件的url
+
+
+we will learn about how to make the most at the built-in tags and filters that django shifts with
+	{{ word|lower|first }}
+	HOORAY-hooray-Hooray
+
+filters let you display data in your template in different way, without having to do any extra coding in your view functions
+************
+<article>
+    <h2><a href="{% url 'courses:course_detail' pk=step.course.pk %}">{{ step.course.title }}</a></h2>
+    <h3>{{ step.title }}</h3>
+    {{ step.content|linebreaks }}
+</article>
+== “I love\n Django"
+==<p>I love<br/> Django</p>
+***********
+template tags help you write a piece of code that you can drop into your templates when you need them.
+we'll be extending the course library you build in django basics,
+so we'll also write our own custom tags and filters to do cool things,
+like estimate how long it might take someone to complete a course, 
+create an navigation menu, and convert tags from one format into html,
+by the end of this course, you'll have an enhanced, more customsed version of website you created in django basic
+you'll have written a template tag that display the navigation menu,
+and one that makes the latest courses up here at the top of each page, 
+you'll also have written filters to list the steps in particular courses, to convert markdown to html
+and even estimate how long it will take someone to complete a particular step in a course
+by the end, you'll be able to confidently use the built-in django template tags and filters
+and you'll have written some of your own as well.
+
+from django basics and Flask basics, you already know a little bit of inheritances, 
+you know for example, you can create a simple "layout.html" 
+or "basic.html" file that can contains the basic elements of your html page,
+like the head tags, the body tags, your css files and everything else, 
+let's do a quicker view of these basic tags before we get started
+
+remember {% block content %}and{% endblock %}, those are the tgas you can add to your "layout.html" template
+and then call on later to replace the data in that block, 
+you can set some default tags inside your block tags or just leave them empty,
+and then replace that whole section dynamically when you extend "layout.html" in other template, 
+in our "layout.html" file contains an empty {% block content %} block, 
+we can use the {% extends %} however to use the "layout.html" template in another template, 
+if we use the same {% block content %} tag in the "home.html" template,  wen can fill that content with sth else
+		{% block content %}
+		<h1>Welcome!</h1>
+		{% endblock %}
+		
+and the {% url %} tag, it lets you link to somewhere else in your project, without having to type in a whole url, 
+instead, you just type in the {% url %} tag, and pass it the name of the path to the view you want to point to as a string, like so
+		<a href="{% url 'hello_world' %}">Home</a>
+
+you can also pass in a "namespace url" to the "url tag", this way is the preferred way to use this tag
+    <a href="{% url 'courses:course_list' %}">Courses</a>
+    
+now let's review how Django handle "static" files, in "layout.html", you see
+	{% load static %}
+the "load" tag helps django to get ready to load data files, like yous css, 
+now make note of the {% static %} tag that points to your css file, 
+basically the "static" tag means we don't need to type out the full path the that css file,
+django knows how to find the static file we named, in this case
+django knows to look in static folders for a css directory, and then load "layout.css" in that directory, 
+but you might have other scenarios with more complex setups, 
+
+for last bit of for you???, let's talk about filters
+remember the "linkbreaks" filter from django basics?
+it replaces link breaks in plain text with html, so for example, 
+		"I love\n Django"   (\n is new line)
+would become: <p>I love<br/> Django</p>
+this is handy when you're copying and pasting texts,
+and you don't want to do many manual work to make valid html, 
+now let's learn new ways to customise templates

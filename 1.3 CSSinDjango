@@ -1,0 +1,2 @@
+添加一些app-特定的静态内容(app-specific static content)到你的网站中,这是只有特定app才需要的CSS或其他静态文件,不是整个项目
+明白如何includeapp-特定的内容到你的项目中,以及为什么你可能需要这样做
