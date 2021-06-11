@@ -1,0 +1,95 @@
+DIY custom template tags.建一个模板标签,它会一直给我们提供一个到我们的library中最新的course的link
+
+自定义模板标签和过滤器 参考:
+https://docs.djangoproject.com/en/1.8/howto/custom-template-tags/
+
+template: 是给所有关于模板的django的模块,在这个课中我们会用到好几次
+					from django import template
+					
+template.Library: 是一个class,让我们通过它自己的一个实例注册新的tags和filters
+
+register.simple_tag(tag_name)
+@register.simple_tag
+	将一个function注册为一个简单的tag,
+	简单的标签不include新的模板,没有一个结束标签, 也不会assign values to context variables
+====================================================================================================
+we´ve learnt a lot about the built-in tools that django ships with, but sometimes you need sth even more custom,
+sometimes it's time to your own template tags, 
+just like you can create templates that your can include on the fly in other templates,
+you can also write template tags that you can plugin into templates that will render information,
+for example, if you always wanted to display the newest items added to a store, 
+or the top rated game, you can write a custom tag that will dynamically更新 figure out what's the newest or best item is,
+and display??? that for you, that's exactly what we are going to do, 
+
+we're going to write a custom template tag that will always display the newest course available at the top of the page,
+so people who come to our site frequently can easily find courses they might not have seen before, let's start.
+
+template tags are little special, and??? they have to live in their own directory called "templatetags" ,
+so wr created a new directory in "courses" app,  called "templatetags", don't forget, 
+in order for python to recognise "templatetags" as a python package, we have to add in an empty "__init__.py",
+then we created a second file, in which we will write our custom tags and filters, "course_extras.py", 
+since these are the extra tags for the course's app, now we're ready to get started.
+since this is the template tag, we need to import the template module from django, 
+that's because, the template module contains the function we need to register our template
+when you register your template tag, what you're doing is making it available to django's template language, 
+so you can use it:
+						from django import template
+						
+						from ..models import Course
+						# from learning_site.courses.models import Course  #这个会出错
+						
+						register = template.Library()
+						
+						
+						def newest_course():
+								""" Gets the most recent course that was added to the library. """
+								return Course.objects.latest('created_at')
+								
+						register.simple_tag('newest_course')
+			
+			*create a new variable called 'register' that calls the class we need later and save ourselves some typing
+			*this is basic python code
+			*we instantiated an instance of a library class, locate it in the template library
+			*and named that instance "register"
+			*now write a template tag, it's just a function that that's a specific thing,
+			*and you can plug it in your template using regular templates and tags
+			*like all functions, it needs to be defined--"def newest_course():"
+			*then we can add a nice "docstring" to let us know what this function does
+			*then we need to create our query, we know we want to return the latest course from the "Course" model,
+			*so we can use a method called "latest" to get it that like this
+					return Course.objects.latest('created_at')
+			*we have to pass in the field in the model that we want "latest" to pay attention to
+			*in this case, we concern the "creation date" so we use the "created_at" field to get the latest course
+			*we're using the "Course" model but we haven't imported yet, so we need to import "Course"
+			*the last thing we need to do is "register our tag",
+			*there're a few different kinds of custom template tags and we'll go over them later
+			*this one is a simple tag which will return its result as string
+			*there're two different ways to register your tag, the long way,
+			*then fill in the name of the tag "newest_course"
+			*we add this "register" tag right below the our function, 
+						register.simple_tag('newest_course')
+			
+			*and a shorter, cleaner way to do this, we can use the decorator right before our function without filling anything
+						@register.simple_tag
+						def newest_course():
+			
+in order for our template tag to show up, we have to let the template we're dropping it into know that it exists
+just like you have to use the "extends" tag to say 'this template will extends that other template'
+and you use the "load" tag to say "I want to load the static files",
+you can also use the "load" tag to load your template tags into a template and make them more accessible to that template
+we want this tag to appear in the "layout.html" template, so let's open that up.
+we add the "load" tag at the top of the page 
+now we can use our template tag "course_extras" to get the most recent course
+			{% load course_extras %}
+			
+then down below we add a new <p>, and then just drop in out tag "{% newest_course %}"
+			<p>Don't miss our latest course, {% newest_course %}</p>
+			
+然后刷新网页,会看到 "Don't miss our latest course, Python Testing"在导航菜单中。
+你可能会觉得怪奇我们为什么要将这个做成一个tag, 
+instead of just getting this information in the view and passing it in through the template,
+and we could have done that, but using the template tag for this makes the code more reusable,
+once we've written that tag we don't have to perform the work of calling the function, returning the value,
+and adding the template variable where we want it, we just drop the tag in, and we're done,
+you can also create template tags that take contents, for example, that takes a string and use it to look sth up,
+or transform it in some way, we'll get to that in later videos

@@ -1,0 +1,59 @@
+Learn how to chaining filters works and how to do it on your site.
+
+参考: https://docs.djangoproject.com/en/1.8/ref/templates/builtins/#escape
+
+lower: filter, 变小写
+capfirst: filter, 首字母大写
+===============================================================================================================
+in the last video, we wrote a custom filter to help us estimate how long a step would take to complete, 
+based on the "wordcount" of its content, but we got stuck on how to how to test this filter, 
+since we don't currently a variable we can try it out on.
+but what if we could somehow use the built-in "wordcount" filter, we can.
+we can even use more than one filter on a variable, this is called "chaining", for example,
+	     {{ word|lower|capfirst}}
+	     
+	     *let's say we have a word in all "cap", like "HOORAY!"
+	     *we can apply the "lower" filter to it, it becomes "hooray!"
+	     *we can then apply "capfirst" filter, which capitalises the first letter in a string, 
+	     	and the output would be "Hooray!"
+	     	
+the filters are applied the template variable in order(按顺序), so if we've done "capfirst" and then "lower",
+the resulting output would be in all lowercase "hooray".
+each filter is applied to the result of one before it, 
+so let's see how we can make this work for us to try out our filter.
+
+go back the "step_detail.html", 
+1) and make sure we've loaded our custom filter into this template, so {% load course_extras %}
+		***remember that filters are applied to the variable or expression that they are attached to, 
+		***so right now the expression 'con|wordcount' actually produces a number, 
+		***the number of words in the variable "content",
+		***that whole expression 'con|wordcount' = the numbers we need, the "wordcount", 
+		***so let's see if we can get our filter to work with the "wordcount" filter, 
+		***we can add another sentence to our paragraph here to test our theory??? about being able to chain these filters
+2) add a sentence behind the estimated words sentence,
+================================================================================================================
+
+{{ con|linebreaks }} Content: {{ con|wordcount }} words. Estimate time to complete: {{ con|wordcount|time_estimate}} minutes.
+================================================================================================================
+run the server again, go to "Python Basics" and "Using the Shell", 
+we can see at the bottom it shows up the time we spent on this step.
+the content of this step is 26 words, and our new custom filter estimated that it will take 1 minutes to complete this step.
+but remember what we said about chaining, let's use the "pluralize" filter on "minutes" for those courses like this one, 
+that might only take 1 minute, they probably aren't many of those in the real world, but it's a good practise, 
+how do you think we would do that? if the expression "con|wordcount" gives us a number for "word_count",  
+and adding "|time_estimate" gives us a number of minutes, we should be able to add "pluralize" to that expression, 
+to make "minutes" plural if we needed to, depending on the number of minutes we estimate the step will take,
+so let's try that out.
+
+we can just copy the "{{ con|wordcount|time_estimate}}" to save us some typing, 
+and remember when using the "pluralize" filter, you take off the "s" that makes the words plural, 
+and just immediately add to that word you include your variable,
+so after "time_estimate", we add another "|", and we attach the "pluralize" filter, 
+then refresh our page, "1 minutes." changes into "1 minute.",
+theoretically, we could keep chaining as many filters as we want it to to one particular variable to get the result we needed,
+and this makes our data really dynamic, and flexible, 
+
+as you can see, chaining filters is really useful, 
+we even mixed in match between the built-in filters and our own custom filters,
+and it works just like we thought it would, 
+for our last trick, let's see what we can do with writing a filter that will convert "markdown" tags to html

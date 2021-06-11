@@ -17,7 +17,7 @@
 ***{% static "/path/to/file.ext" %}, 生成到指定文件的url
 
 
-we will learn about how to make the most at the built-in tags and filters that django shifts with
+we will learn about how to make the most at the built-in tags and filters that django ships with具有的
 	{{ word|lower|first }}
 	HOORAY-hooray-Hooray
 
@@ -36,7 +36,7 @@ we'll be extending the course library you build in django basics,
 so we'll also write our own custom tags and filters to do cool things,
 like estimate how long it might take someone to complete a course, 
 create an navigation menu, and convert tags from one format into html,
-by the end of this course, you'll have an enhanced, more customsed version of website you created in django basic
+by the end of this course, you'll have an enhanced, more customised version of website you created in django basic
 you'll have written a template tag that display the navigation menu,
 and one that makes the latest courses up here at the top of each page, 
 you'll also have written filters to list the steps in particular courses, to convert markdown to html

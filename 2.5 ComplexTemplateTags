@@ -1,0 +1,90 @@
+写一个更加复杂的模板标签, 一个返回一个字典和有一个更加复杂的implementation的模板标签
+
+simple_tag: https://docs.djangoproject.com/en/1.8/howto/custom-template-tags/#simple-tags
+
+inclusion_tag: https://docs.djangoproject.com/en/1.8/howto/custom-template-tags/#inclusion-tags
+
+register.inclusion_tag("path of tag_template.html")(tag_name/function_name)
+或者: @register.inclusion_tag("tag_template.html")
+注册一个inclusion_tag, inclusion_tag render一个模板到任何它被用到的地方
+(render a template into wherever they're used)
+===============================================================================================
+now you're ready to write a template tag that can serves as a menu navigation for your site,
+basically we want to add a menu on the left, that lists all the courses, 
+and links to the "course_detail" page fro each one,
+it will show up on each page and make it easier to move around the site,let's get started.
+open "course_extras.py" again, we need to create a new function, "nav_courses_lists",
+this function isn't going to take any argument, we just want to get all the courses and return them, 
+so it's pretty straightforward, and let's add a docstrings to explain that.
+we've already imported the "Course" model, because we used it in our last template tag,
+so now we just need to write our query, and return a dictionary
+
+				def nav_courses_lists():
+						"""Return dictionary of courses to display as navigation pane"""
+						courses = Course.objects.all()
+						return {'courses': courses}  
+						
+				*so we're assigning the variable "courses" to the result of the query "Course.objects.all()"
+				*which it does exactly what it says,it gets all of the course objects
+				*we then return those courses in a dictionary, 
+				
+before we finish "course_extras.py", we need to register this tag,
+the type of register we're writing here is called a "inclusion_tag" which is different than a "simple_tag",
+because "inclusion_tag" returns its data as a whole other template, not just a string, 
+that explains its name, you're including another template in the template in which you use this tag, 
+registering our "inclusion_tag" is therefore a little bit different than registering a "simple_tag" we did before, 
+
+			register.inclusion_tag('courses/course_nav.html')(nav_courses_lists)
+			
+			*we pass in the path to the template file that we haven't actually created yet, 
+			*but "course_nav.html" is the template we're going to include in another template whenever we used this tag
+			*and we also have to pass the name of the function
+			
+we were using the same register variable,
+which you remember it's where we're keeping the call to the template.library class,
+but instead of calling the "simple_tag" method on that class, we're calling the "inclusion_tag" method,
+we pass it the path to the template this tag gets included in as well as the name of the tag, 
+but that's a lot of typing, there's a shorter way to register "inclusion_tag"s, 
+just like with out "simple_tag", we can use a decorator, @register.inclusion_tag("courses/course_nav.html"),
+to replace the other register function (register.inclusion_tag('courses/course_nav.html')(nav_courses_lists))
+
+now we need to code this template, this "course_nav.html", 
+remember, since this is an "inclusion_tag", we're creating a template that can be dropped in anywhere
+so over here in "learning_site/courses/templates/courses", create a file "course_nav.html",
+the next part should look familiar, since our function gets all of the courses for us, 
+we can just open up a {% for %} loop and open up a <div> and use the "course.title",
+				{% for course in courses %}
+					<div><a href="{% url 'courses:course_detail' pk=course.pk %}">{{ course.title }}</a></div>
+				{% endfor %}
+
+that's a great start, but since we're using this template to navigate among the different courses in our site, 
+we should probably add some links, so right before "course.title" we'll open up a <a> tag,
+and this is a great opportunity to review the {% url %} tag and how it works, 
+we pass the primary key(pk).
+now let's review the {% url %} tag, we include the name of the url as the first argument to the {% url %} tag, 
+that's the  'courses:course_detail' part, we've included "courses" because the we've namespaced our url 
+and "course_detail" because that's the name we gave the url we want go in our "urls.py" file,
+go double check "urls.py" to see what it means. then we pass in the primary key--pk, that this specific url needs, 
+we can't go to a detail's page if we don't know which course we need details on,
+now, so that we always have this navigation section available to us,
+let's drop it into our "layout.html" page, we've already had "{% load course_extras %}" up here,
+so right inside our "site-container", we can create a new <div> and just drop in {% nav_courses_list %} 
+
+				<body>
+    			<div class="site-container">
+        		<div>{% nav_courses_list %}</div>
+        		<nav>
+            	<a href="{% url 'hello_world' %}">Home</a>
+            	<a href="{% url 'courses:course_list' %}">Courses</a>
+       			</nav>
+        		<p>Don't miss our latest course, {% newest_course %}</p>
+        {% block content %}{% endblock %}
+    			</div>
+				</body>
+				
+refresh the page again, we can see our navigation pane, there are four clickable courses above the navigation menu,
+now in the real world, your would probably add some css to make this navigation pane display across the top, 
+in a more attractive way or along the left hand side, but we've provided our concept here, 
+and so I'll leave it to you to experiment with css with a way you want to.
+
+you can write your own filters too.

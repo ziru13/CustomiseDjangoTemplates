@@ -1,0 +1,70 @@
+学会如何在你的项目中使用来自external library的filters
+参考: https://docs.djangoproject.com/en/1.8/ref/contrib/humanize/
+
+
+what if you wanted to follow a associated press file for our site
+the associated press, a media company, has a style guide tha governs how they print numbers,
+for example, for number 1 to 9, they spell out the number, 
+but for numbers 10 and over, the use the numeric, django has a new filter for that, 
+if we add the "apnumber" filter to our "count" method, 
+then "apnumber" will decide whether to use letters or numbers to represent the link of the set,
+first we have to load this template library into our project, 
+so open up "setting.py", in the "INSTALLED_APPS" section, add what's below before "courses"
+	"django.contrib.humanize",
+	
+then add ""{% load humanize %} to the tip of our "course_detail.html" template
+		{% extends "layout.html" %}
+		{% load humanize %}
+
+		{% block title %}{{ course.title }}{% endblock %}}
+		**this just let django know that we're planning on using the tags in filter that are in this library
+		**finally we add the filter "|apnumber" in behind the "count" method
+		   <p>There are {{ course.step_set.count|apnumber }} step{{ course.step_set.count|pluralize }} in this course: {{ course.step_set.all|join:", " }}</p>
+then run the server and see the page again
+	There are two steps in this course: Using the Shell, what's the deal with strings?
+	
+	**we see that the number "2" is spelled out "two" instead of being represented by the number 2
+now over the last video in this one, we've made that one sentence more dynamic and useful, 
+but let's jump over to "step_detail.html" to see what else we can try out.
+sometimes you know that you're going to be chaining lots of filters to one particular variable, 
+it's useful to make that variable a little bit shorter so you have to type fewer bytes,
+django lets you do that on the fly??? with the "with" tag,
+since we're going to be adding some extra functionality around the course content in this video and the next one, 
+let's go ahead and make "step.content" a little shorter
+
+we just open up a {% with %} tag, and we can choose a new variable name for "step.content",
+we're gonna call it "con" for "content": "con=step.content",
+and when we finish using the variable, we can just say {% endwith %},
+and we can replace "step.content" with "con" and go back to our page
+		
+		<article>
+				<h2><a href="{% url 'courses:course_detail' pk=step.course.pk %}">{{ step.course.title }}</a></h2>
+				<h3>{{ step.title }}</h3>
+				
+				{% with con=step.content %}
+				<!--        {{ step.content|linebreaks}}-->
+					{{ con|linebreaks }}
+				{% endwith %}
+		</article>
+		{% endblock %}
+
+we go to a "step detail" page then we see nothing has change,
+we were able to change our variable name without breaking anything,
+while we're inside this {% with %} block, we can use this shorter variable name "con" to refer to "step.content",
+it's doesn't save us a lot of typing right now,
+but we're going to be adding some extra features to this page that have to do with the "content",
+so this will help us out soon.
+in a later video, we're also going to write a custom filter that will help us estimate 
+how long it will take for someone to finish a course based on how long the description is,
+to get ready for that, let's learn about one more built-in template filter "wordcount",
+it does exactly what it sounds like, it gives you the number of words in a particular variable, let's try it out.
+add "Content: {{ con|wordcontent }} words" behind the "linebreaks" filter, like below,
+		    {{ con|linebreaks }} Content: {{ con|wordcount }} words.
+		    
+the go to the "step_detail" page, ---http://127.0.0.1:8000/courses/1/2/
+refresh, we can see "Content: 26 words." under the three sentences of content,
+there are 26 words in the content of this particular step.
+
+we've made some information about our courses and steps a little bit more dynamic,
+in the next video we will learn how to write our own custom template tags and filters for when the ones
+that django provides us don't quite get the job done

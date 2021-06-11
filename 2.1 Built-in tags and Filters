@@ -1,0 +1,118 @@
+在写我们自己的自定义模板标签前，使用更多的内置标签和过滤器
+
+参考: django自定义Date过滤器
+https://docs.djangoproject.com/en/1.8/ref/templates/builtins/#date
+
+wordcount: 数在变量中的单词数量(👉空白键定义)
+truncatewords: X: 在X这个字之后结束变量, 如果有内容被cut off,则添加一个省略号"..."
+urlize: 将HTTP(S)和邮箱地址转变成用正确链接的HTML锚标签<a>
+====================================================================================================================
+before we div into some template tag diy, let's take a look at a couple of more really handy built-in tags, 
+just like python has na "if" statement, django also gives us a way to handle conditional logic in templates
+the {% if %} tag, let's take a look
+open up "course_list.html", we're supposed to have a description for every course, but what if we don't,
+what if that's a recent addition to our models and maybe some older courses don't have that field filled in,
+if we just display the description unconditionally, we run the risk of looking a little bit silly 
+if we have a section for description but nothing to go with it,
+this is where we can use the {% if %} tag, sth to know is the {% if %} tag is pretty smart,
+you can just do sth like check if a field exists, such as "course.description",
+and if it does, display it, and then you disclose your "if" tag {% endif %}
+		        <div class="card-copy">
+            {% if course.description %}
+                {{ course.description }}
+            {% endif %}
+            </div>
+so now, we'll only display "course.description" if it has any data in it,
+start the server again, http://127.0.0.1:8000/courses/
+right now all of our courses have description, we know that all of our data is attacked???
+but that's not all the {% if %} tag can do, it can check how long the description is based on the "wordcount",
+and cut it off if it's too long for us, so let's use the "wordcount" filter to only display our full description 
+if the "wordcount" is less than or equal to 5 words, 
+if it's longer than that, so 5 words are over, then we'll do sth else,
+in this case, we'll display the "course.description" 
+but we'll use the "truncatewords" method to cut off everything over the first 5 words,
+					  <div class="card-copy">
+            {% if course.description|wordcount <= 5 %}
+                {{ course.description }}
+            {% else %}
+                {{ course.description|truncatewords:5 }}
+            {% endif %}
+       	 		</div>
+refresh the page, http://127.0.0.1:8000/courses/
+每个course下面的description部分中, 只显示前五个字, 超过5个就用...代替
+我们也应该给"course_detail"网页添加一个link, for one??? we "truncate" the description, 
+so people can get to the full description easily, let's add that now.
+right under the "truncatewords", we can open up an "anchor" tag <a></a>,
+and this is a great place to use our "{% url %}" tag to, 
+						<div class="card-copy">
+            {% if course.description|wordcount <= 5 %}
+                {{ course.description }}
+            {% else %}
+                {{ course.description|truncatewords:5 }}
+                <a href="{% url 'courses:course_detail' pk=course.pk %}">Read more</a>
+            {% endif %}
+        		</div>
+refresh the page again, http://127.0.0.1:8000/courses/, we can see the clickable "Read more" behind "..." 
+and when click it, it works, 
+we also have a date for each course that shows when the course is created, 
+but what if we don't like the format that it's in?
+django has a filter for that too, fi you give django a date, you can apply the "date" filter 
+and pass in arguments that specific the format, for example, 
+		a capital "Y" is a 4 digits "year"
+		a capital 'F' is the month spelled out
+	
+let's try this a couple of different ways, if we wanted to say "August 23rd, 2015" all spelled out, we'll do:
+after the {% endif %} tag, we do a new <div>
+					  <div class="card-copy">
+            {% if course.description|wordcount <= 5 %}
+                {{ course.description }}
+            {% else %}
+                {{ course.description|truncatewords:5 }}
+                <a href="{% url 'courses:course_detail' pk=course.pk %}">Read more</a>
+            {% endif %}
+            <div>Created on: {{ course.created_at|date:'F j, Y' }}</div>
+       			</div>
+refresh the page, we can see that these courses are all created on "Created on: March 16, 2021"
+if we want to change the format of the date, we don't have to do any other processing, 
+we just need to replace the format "F j, Y" with the different format, 
+so let's say we wanted to do "the number of the month/day/two digits year"--"m/d/y", we will do
+						<div>Created on: {{ course.created_at|date:'m/d/y' }}</div>
+
+then refresh the page, it looks like this: "Created on: 03/16/21"					
+this is no sth you need to memorise, always refer the documentation to refresh the memory 
+and how to make your dat more flexible.
+our final trick in this video, let's head back into "learning_site/courses/views.py" in our courses app, 
+to add an email address to the "course_list" view, 
+					def course_list(request):
+    				courses = Course.objects.all()
+						# output = ','.join(courses)
+						# output = ", ".join([str(course) for course in courses])
+						email = 'questions@learning_site.com'
+						return render(request, 'courses/course_list.html', {'courses': courses,
+																																'email': email})
+					
+			*we also want to make sure to pass in this "email" variable so that our template gets it
+			*then go to "course_list.html", we want to create a footer
+			*that will allow our users to send us an email if they have any question
+					
+					<div>Have questions? Contact us! <a href="mailto: {{ email }}">{{ email }}</a></div>
+					
+			*and the standard way that you setup an email on the web is just to do <a href="">
+			*make this a "mailto:" so that whenever you click on it, it automatically starts your email programme 
+			*and opens up an email, pass in our "email" variable, 
+			*and for the display tags we'll just use our "email" variable
+			
+refresh the page, we will see the handy footer at the bottom: Have questions? Contact us! questions@learning_site.com
+and our email address showed up and is clickable, it's technically correct
+but we have do include this "anchor" tag and we have to type out the "email" variable twice, 
+that's a little annoying, and it's not really inline with Django's "Don't repeat yourself" philosophy,
+that's why django provides the "urlize" tag so we can get rid of this whole "anchor" tag,
+and just use the "email" variable with the "urlize" filter:
+						  <div>Have questions? Contact us! {{ email|urlize }}</div>
+						
+refresh our page, we see that we still have the valid email address, that's a clickable link ready for us.
+the cool things about "urlize" is that it automatically links as a "mail to link" if the tags is a valid email address,
+otherwise, it tricks the variable as a normal url link to an external website, it saves us from repeating ourselves
+
+there so many wonderful built-in tags and filters in django, we've just touched a few on them, 
+but it's time to move on and start writing our own template tags in the next video

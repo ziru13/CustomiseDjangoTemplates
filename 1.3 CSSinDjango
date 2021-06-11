@@ -1,2 +1,65 @@
 添加一些app-特定的静态内容(app-specific static content)到你的网站中,这是只有特定app才需要的CSS或其他静态文件,不是整个项目
 明白如何includeapp-特定的内容到你的项目中,以及为什么你可能需要这样做
+
+管理static files: Django documentation有更多关于Django如何在不同环境中serve静态内容的细节
+参考: https://docs.djangoproject.com/en/1.8/howto/static-files/
+
+you can also use template tags to get a other date in your project, including your static files, like your css.
+in django you need to store you static files in a special way.
+it's best to store your project-wide static files in a directory called "assets",
+in our case, the setup looks like this
+	learning_site
+	----| assets
+	  ----| CSS
+	     ----| layout.css
+
+to add css that specific to an app however, you need to follow a slightly different pattern,
+if we want to add css to our "courses" app, we need to add a directory called "static" underneath our "courses"'s app,
+that directory contains its own directory also called "courses", 
+"static/courses" then contains directories for your css, your javascript files and any images you're using in your app,
+this is so that django can always find the files you're referring to.
+adding a directory with the same name as your app inside your static folder feels a little weird, 
+but it helps you avoid namespace collisions(冲突) later on, for example, 
+if your project had an app called "admin", and another called "mainsite", 
+and both of those apps has static files associated with them, they might have files with the same names, 
+"style.css" is a really common way to name a basic css file, 
+when django tries to find the "style.css" in the static folder for your "admin" app,
+if you have the extra??? directory with the name of your app, then django goes to the css directory in 'static/admin',
+and that extract "admin" helps django know it's in right place
+this is called "namespacing", so let's try it out.
+make sure to reload you workspace, first we created a new directory in the "courses" app called "static"
+		courses
+			---|static
+				---|courses
+					---|css              ***this is where we store the css file that is specific to this app
+						---|courses.css    ***now we just need to add this new css to our template
+						
+but we have a problem, this is app-specific css, so we should not add it to "layout.html",
+we don't want this css to be used on other pages in this project that aren't in our courses' app,
+so we should add a new block tag to "layout.html", we just open up a block tag called "static"
+we add the "static" block after the original "stylesheet", 
+because we don't want to have to add the project wide css to each template
+the "static" tag is for app-specific css in other templates
+	<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+    {% block static %}{% endblock %}
+	</head>
+	
+	
+now let's go to "courses/templates/courses/course_list.html" and add our app-specific css to this file
+{% extends "layout.html" %}
+{% load static %}
+
+{% block static %}<link rel="stylesheet" href="{% static 'courses/css/courses.css' %}">{% endblock %}
+{% block title %}Available Courses{% endblock %}
+
+**我们可以直接从layout.html中复制那段<link>,但是一定要记住改了里面的path为你添加的css,
+**并且添加的css的path要更加详细--'courses/css/courses.css', django现在一定会知道去哪里找这个app指定的css
+**我们也要添加{% load static %}标签到上面,这让django知道我们尝试load一个新的static content
+**然后run服务器
+去到网页中---http://127.0.0.1:8000/courses/, 我们可以看到每个course的标题都变成了蓝色
+只是应为这个指定的page用了我们指定的css,如果我们打开这个css文件,我们看到我们改变的css是标题的颜色
+
+所以那是"static"标签 in the net shell
+next video, some useful built-in filters and start building our own custom template filters

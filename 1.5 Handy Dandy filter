@@ -1,0 +1,78 @@
+filters对于在你的网页上以一个dynamic的方式展示数据很方便, 不需要写特别的function到control display
+
+参考: filters的humanize设置
+https://docs.djangoproject.com/en/1.8/ref/contrib/humanize/
+
+django.contrib.humanize---INSTALLED_APPS setting.
+在template中使用{% load humanize %}
+
+1. join过滤器: |join:", "
+2. length过滤器: |length 
+3. count可以直接代替 ".all|length"
+4. pluralize: course.step_set.count|pluralize, 可以根据前面的set的数量显示单复数
+===========================================================================================================
+now that we have our css setup and ready to go, let's see about making our data more dynamic using template filters,
+remember that a filter is applied to a variable you pass in your template from your view,
+and use the pike "|"??? notation, let's look at some other filters that django include for us.
+open up "course_detail.html", let's add a section at the top that lists out all of the steps in this course in <p> form:
+    <h2>{{ course.title }}</h2>
+    {{ course.description }}
+    
+    <p>These are the step(s) in this course: {{ course.step_set.all }}</p>
+    
+    <section>
+
+then run the server to see what this looks like, and in "course_detail" page is where we test it, 
+http://127.0.0.1:8000/courses/1/, we can see the sentence we add it, but this doesn't render very well
+	These are the step(s) in this course: <QuerySet [<Step: Using the Shell>, <Step: what's the deal with strings?>]>
+	
+the new information we added is appearing in the brackets [], not very readable,
+we can use a "join" filter to break up the items between these brackets, without having to go into a "for loop".
+or doing any other processing, so let's try that, behind the "step_all.all", we add the "join" filter with "|"
+and then we have to pass in the thing that we want to separate our items by,
+whatever we want use to separate these items, we'll go between these quotation marks
+and we do that by using a colon":" and opening some quotation marks ""
+in this case, since we're adding these items to the end of this sentence, 
+we want to separate each step with a comma"," and a space
+	    <p>These are the step(s) in this course: {{ course.step_set.all|join:", " }}</p>
+	    
+refresh our page again, it shows
+	These are the step(s) in this course: Using the Shell, what's the deal with strings?
+
+this is much better, but if we use the "length" filter to make the sentence even more useful,
+using the "length" filter gives you the number of items in a particular set, let's see how that work
+
+so instead of saying these are the steps, we can say 
+<!--    <p>These are the step(s) in this course: {{ course.step_set.all|join:", " }}</p>-->
+    <p>There are {{ course.step_set.all|length }} step(s) in this course: {{ course.step_set.all|join:", " }}</p>
+    
+   **a specific numbers of steps, and we can get at that number by doing "course.step_set.all|length"
+   **the way the "length" filter works is: 
+   **even though we have this whole expression called "course.step_set.all" that uses the whole "step_set"
+   **we won't see any of the data in that set, we won't see the title that we see later on in the sentence for example
+   **the "length" filter just gives us the length of the set, or in other words, the number of items in the set
+refresh the page again and we should see the number:
+	There are 2 step(s) in this course: Using the Shell, what's the deal with strings?
+	
+this works fine, but we should be really using a built-in method called "count",
+the "length" causes a large database query to be run, so save our database some troubles if we use "count" instead,
+because it's more efficient, so let's make that change,
+we can replace "all|length" with just "count" method
+	<p>There are {{ course.step_set.count }} step(s) in this course: {{ course.step_set.all|join:", " }}</p>
+	
+then refresh, we see that nothing has changed, everthing is the same
+we just make our website with this very simple change
+now the parentheses as parentheses that we have in the "step(s)" isn't very readable, 
+this is another filter comes in, we can use the "pluralize" filter 
+to make the word "Step" singular or plural based on the number of steps in that set
+		<p>There are {{ course.step_set.count }} step{{ course.step_set.count|pluralize }} in this course: {{ course.step_set.all|join:", " }}</p>
+
+	**this is a bit weird because you had to type the word "step" in singular, 
+	**and immediately follow the set you're referring to in the "pluralize" filter
+	**but basically you're telling Django to make this particular word "step" plural or singular 
+	**based on the number of steps in the set you attached to it
+	
+the contents of set won't render and the number won't render, the only thing you'll see is an "s" at the end of the word "step"
+or not depending on how many steps are in the course.
+let's refresh the page
+there are also some other template tags libraries that we can use in our project, let's test on out in the next video

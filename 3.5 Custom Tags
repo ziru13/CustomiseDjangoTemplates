@@ -1,0 +1,112 @@
+如何通过使用一个自定义过滤器, 将Markdown文本转换成html
+
+Markdown text: 
+参考: https://zh.wikipedia.org/wiki/Markdown
+			https://www.jianshu.com/p/7771794c88a1
+			
+teacher's note reference:
+https://github.com/trentm/python-markdown2
+https://github.com/trentm/python-markdown2
+https://daringfireball.net/projects/markdown/syntax
+https://help.github.com/articles/markdown-basics/
+https://docs.djangoproject.com/en/1.8/howto/custom-template-tags/#filters-and-auto-escaping
+
+1. 一种轻量级标记语言
+2. 它允许人们使用易读易写的纯文本格式编写文档，然后转换成有效的XHTML（或者HTML）文档。
+
+markdown2: 安装-- pip install markdown2
+mark_safe(variable): 将变量标记成"直接地安全发送到浏览器",而不用提前escaping/coding 你的contents
+safe: 过滤器, 
+==============================================================================================
+we're almost done with customising django templates, in real world scenario, 
+you probably have users using pasting long text descriptions into your admin site using markdown, 
+or another plain text format, markdown is what uses on github for example, for "readme" files,
+it allows you to easily type texts that will render as html on a web page,
+but in django you have to do some preparation to get that to happened as expected,
+so let's write a custom filter for that.
+
+1) first install a python library called "markdown2", in terminal, "pip install markdown2"
+2) then open "course_extras.py" and import "markdown2" to the top, now just make sure that everything is installed,
+let's start our server and load our page, if we don't get an input error, we know that everything is installed correctly.
+3) let's create our function at the bottom, we'll call it "def markdown_to_html()", 
+4) and it takes the argument, it'll take in "markdown_text" as argument, it'll return html
+	so we'll call what it returns "html_body", it's the step in the middle that we need to worry about, 
+5) so let's add the docstring so that everyone knows what this function is supposed to do.
+
+if we look at the documentation, for "markdown2", we see that it's pretty simple, 
+we should be able to just call the "markdown" method on our passed-in text, and it'll do all the processing for us.
+it's a really simple, powerful library, and so something amazing and useful, but doesn't require lots of work on our part.
+so let's add that to our function
+
+6) so we can say:, and we pass in our "markdown_text"
+					html_body = markdown2.markdown(markdown_text)
+	this will convert our "markdown_tet" into html, and store that results in our variable "html_body" which we then return.
+
+7) finally, we need to register our filter, this is going to be the exactly the same as whenever we register our "time_estimate" filter,
+	the only thing we need to change is name of the filter, "
+				@register.filter(markdown_to_html)
+
+
+can you think of a place in our site where someone might enter markdown text instead of regular html or plain text?
+that would be the "course.description", sometimes those are longer adn require some formating, 
+so let´s create a super-user to login into the admin, and replace the current "course.description" with some markdown text.
+so in the terminal, stop the server, and then run :
+			py manage.py createsuperuser
+			Username: ziru
+			Email address: ziru@customtags.com
+			Password:(19930913fish)
+			Password (again):(19930913fish)
+			Superuser created successfully.
+
+restart the server, then head into the admin, to add it a "course.description" with some markdown text, 
+因为我们之前已经有一个user,记得退出后再重新登录上面创建的那个user
+"http://127.0.0.1:8000/admin/courses/course/", we're going to test "Python Testing"
+"http://127.0.0.1:8000/admin/courses/course/4/change/", right now in "Description" section,
+			it just says "Learn to test your Python application with unittest and doctests."
+			
+we're gonna replace this with some markdown text we've created and we'll go over what we should do
+		## Testing is Amazing!
+		
+		Learn to test your Python application with unittest and doctests.
+		Things you will learn:
+		
+		- unittest
+		- doctests
+			
+ **1)this is the header, and the ## sign means that this line should appear in header tags <h2>
+ **2) and 3) line should each show up inside their paragraph tags <p>
+ **4) and 5) the "-" (dash) sign, in html, this should render as an unordered list, 
+ ** let's save it, and head back to our course
+
+when we go to "Python Testing", http://127.0.0.1:8000/courses/4/, 
+it looks like those special markdown characters just render normally, they didn't convert, 
+that wsa because we forgot to add this filter that we created to our "course.description", let's add that,
+we can go to "course_detail.html", add the "markdown_to_html" filter in the "course.description"
+				<article>
+    			<h2>{{ course.title }}</h2>
+    			<!--    {{ course.description|markdown_to_html|safe }}-->
+    			{{ course.description|markdown_to_html }}
+
+this is actually a nice thing that django is doing for us, 
+it's django's way of protecting us from code that might get plugged into our data, and might be malicious, 
+we just need to tell django that this code is safe, meaning that it can render this html as html with no problem,
+for that we can use the "safe" filter, so we can chain "safe" nest to "markdown_to_html",
+now when we reload the page, we get out nice, friendly rendered html, 
+there's a better way to mark text as "safe" though, we should mark our output from the filter as "safe",
+so that anything that goes through this filter is marked "safe", 
+and we don't have to keep using the "safe" filter over and over again,
+so let's import sth called "mark_safe" into "course_extras.py"
+			from django.utils.safestring import mark_safe
+			
+and then we just pass our output "html_body" in "mark_safe()" as we return it
+			return mark_safe(html_body)
+			
+finally we we can go ahead and delete "safe" filter from our variable,
+then refresh the page, we have the exact same result, which is what we wanted.
+
+in the real world, we do a few thing differently, 
+we would probably have the users select the format that they were using to select their data, 
+markdown, plain text, or sth else, 
+and we would use the appropriate conversion filters accordingly, 
+we would also add that filter to all the text content, for example, to the step content as well as the course content, 
+but for all purposes, we've proven the concept, and that's enough

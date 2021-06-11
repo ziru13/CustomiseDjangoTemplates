@@ -1,0 +1,56 @@
+这个过滤器会帮你预测一个人完成你网站中一个课程的某一步需要多少时间
+
+django自定义模板过滤器的参考文件：
+https://docs.djangoproject.com/en/1.8/howto/custom-template-tags/#writing-custom-template-filters
+
+plurize：当用于一个不是1的数量，默认仍会返回一个“s”，而数量是1是不返回什么的的过滤器。你可以	  按需要提供不同的选择，
+	  参考：https://docs.djangoproject.com/en/1.8/ref/templates/builtins/#pluralize
+
+register.filter(‘path/filter_name’, filter_function)
+@register.filter(‘filter_name):
+	 用一个给定的名字注册一个filter
+===========================================================================================================
+we're going to build our own custom template filters that we can use on variables just like built-in filters,
+remember, a filter is sth that you can add to a django variable with the "|" character, 
+that helps make the data in your template more dynamic, 
+
+		{{ num_parties }} party{{ num_parties|pluralize:"es }}
+			----> "1 party" / "5 parties"
+
+in the case of "pluralize" filter that you learned in another video,
+that it can automatically make a word "plural" based on the value of a numeric variable in the template,
+so let's write a filter that will help us to estimate how much time a step in a course will take to complete,
+open up the file we've been keeping our custom template tags in, ----"course_extras.py",
+this is where we'll also be adding our custom filter, make a new function called "time_estimate", 
+and have it take in a value, we're gonna called it "word_count", in our case, this value will be number, 
+the number of words in the step's content, 
+this filter is not going to be super-scientific, this is mostly a thought exercise, 
+but let's say that the longer a step's content is, the more content we think it covers, and more time we think it would take,
+so with that in mind, let's say for every 20 words in a step's content, 
+we think it will take that many minutes to complete the course, so let's code that,
+						@register.filter('time_estimate')
+						def time_estimate(word_count):
+							"""Estimates the number of minutes it'll take to complete a step based on the passed-in wordcount."""
+							minutes = round(word_count/20)
+							return minutes
+							
+	*we're using the "round" function here which is a built-in python function, so we get a nice even number
+	*we don't want to display 5.5467 minutes, this is just an estimate, 
+	*so we estimate that for every 20 words in a "word_count", it'll take about minute to complete that part of the step, 
+	*now we just need to return the minutes, 
+	*and we should add a "docstring", so that everyone else who looks in our code knows what this filter does
+finally, we need to register the filter registering filters is almost the same as registering tags.
+we use the decorator and then instead of saying ".inclusion_tag" or ".simple_tag", 
+we just say ".filter" and pass in the name of our filter --- 'time_estimate', now we can try it out,
+if we hop over to "step_detail.html", we can load our "course_extras.py"---{% load course_extras %},
+
+			{% extends "layout.html" %}
+			{% load course_extras %}
+		
+			{% block title %}{{ step.title }} - {{ step.course.title }}{% endblock %}
+
+so that we have access to our brand new filter, but we don't have a variable for the "word_count" that we've passed in from our view,
+let's see what we can do about that in the next video.
+we've made our filter, but we need to figure out how to use it, 
+what if there's a way we can use the built-in "word_count" filter to get the data we need for this filter, 
+let's find out in the next video
